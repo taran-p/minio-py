@@ -21,13 +21,18 @@ def client_from_env()->Minio:
     url = os.environ.get("MINIO_ADDRESS")
     user = os.environ.get("MINIO_ACCESS_KEY")
     pw = os.environ.get("MINIO_SECRET_KEY")
+    sec_var = os.environ.get("MINIO_SECURE",'off')
+    if sec_var == 'on':
+        sec = True
+    else:
+        sec = False
 
     if url or user or pw:
         client = Minio(
             url,
             access_key=user,
             secret_key=pw,
-            secure=False
+            secure=sec
         )
         return client
     else:
