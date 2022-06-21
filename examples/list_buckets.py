@@ -44,3 +44,6 @@ def main():
     buckets = client.list_buckets()
     for bucket in buckets:
         print(bucket.name, bucket.creation_date)
+
+if __name__=='__main__':
+    main()
