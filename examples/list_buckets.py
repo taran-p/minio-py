@@ -17,7 +17,7 @@
 import os
 from minio import Minio
 
-def connect()->Minio:
+def client_from_env()->Minio:
     url = os.environ.get("MINIO_ADDRESS")
     user = os.environ.get("MINIO_ACCESS_KEY")
     pw = os.environ.get("MINIO_SECRET_KEY")
@@ -29,17 +29,22 @@ def connect()->Minio:
             secret_key=pw,
             secure=False
         )
+        return client
     else:
-        client = Minio(
-            'play.min.io',
-            access_key='Q3AM3UQ867SPQQA43P2F',
-            secret_key='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
-        )
+        return None
+
+def client_from_play()->Minio:
+    client = Minio(
+        'play.min.io',
+        access_key='Q3AM3UQ867SPQQA43P2F',
+        secret_key='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
+    )
     return client
 
-
 def main():
-    client = connect()
+    client = client_from_env()
+    if client == None:
+        client = client_from_play()
 
     buckets = client.list_buckets()
     for bucket in buckets:
