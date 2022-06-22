@@ -14,24 +14,66 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import io
+from random import randint
 from datetime import timedelta
 
 from minio import Minio
 
-client = Minio(
-    "play.min.io",
-    access_key="Q3AM3UQ867SPQQA43P2F",
-    secret_key="zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
-)
+def client_from_env()->Minio:
+    url = os.environ.get("MINIO_ADDRESS")
+    user = os.environ.get("MINIO_ACCESS_KEY")
+    pw = os.environ.get("MINIO_SECRET_KEY")
+    sec_var = os.environ.get("MINIO_SECURE",'off')
+    if sec_var == 'on':
+        sec = True
+    else:
+        sec = False
 
-# Get presigned URL string to upload data to 'my-object' in
-# 'my-bucket' with default expiry (i.e. 7 days).
-url = client.presigned_put_object("my-bucket", "my-object")
-print(url)
+    if url or user or pw:
+        client = Minio(
+            url,
+            access_key=user,
+            secret_key=pw,
+            secure=sec
+        )
+        return client
+    else:
+        return None
 
-# Get presigned URL string to upload data to 'my-object' in
-# 'my-bucket' with two hours expiry.
-url = client.presigned_put_object(
-    "my-bucket", "my-object", expires=timedelta(hours=2),
-)
-print(url)
+def client_from_play()->Minio:
+    client = Minio(
+        'play.min.io',
+        access_key='Q3AM3UQ867SPQQA43P2F',
+        secret_key='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
+    )
+    return client
+
+def main():
+    client = client_from_env()
+    if client == None:
+        client = client_from_play()
+    
+    #Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name)
+    print(bucket_name)
+
+    #Create my-object
+    client.put_object(bucket_name, "my-object", io.BytesIO(b"hello"), 5,)
+
+    # Get presigned URL string to upload data to 'my-object' in
+    # 'my-bucket' with default expiry (i.e. 7 days).
+    url = client.presigned_put_object(bucket_name, "my-object")
+    print(url)
+
+    # Get presigned URL string to upload data to 'my-object' in
+    # 'my-bucket' with two hours expiry.
+    url = client.presigned_put_object(
+        bucket_name, "my-object", expires=timedelta(hours=2),
+    )
+    print(url)
+    
+if __name__ == '__main__':
+    main()
