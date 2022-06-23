@@ -14,51 +14,96 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import io
+from random import randint
+
 from minio import Minio
 from minio.sse import SseCustomerKey
 
-client = Minio(
-    "play.min.io",
-    access_key="Q3AM3UQ867SPQQA43P2F",
-    secret_key="zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
-)
+def client_from_env()->Minio:
+    url = os.environ.get("MINIO_ADDRESS")
+    user = os.environ.get("MINIO_ACCESS_KEY")
+    pw = os.environ.get("MINIO_SECRET_KEY")
+    sec_var = os.environ.get("MINIO_SECURE",'on')
+    if sec_var == 'on':
+        sec = True
+    else:
+        sec = False
 
-# Get data of an object.
-try:
-    response = client.get_object("my-bucket", "my-object")
-    # Read data from response.
-finally:
-    response.close()
-    response.release_conn()
+    if url or user or pw:
+        client = Minio(
+            url,
+            access_key=user,
+            secret_key=pw,
+            secure=sec
+        )
+        return client
+    else:
+        return None
 
-# Get data of an object of version-ID.
-try:
-    response = client.get_object(
-        "my-bucket", "my-object",
-        version_id="dfbd25b3-abec-4184-a4e8-5a35a5c1174d",
+def client_from_play()->Minio:
+    client = Minio(
+        'play.min.io',
+        access_key='Q3AM3UQ867SPQQA43P2F',
+        secret_key='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
     )
-    # Read data from response.
-finally:
-    response.close()
-    response.release_conn()
+    return client
 
-# Get data of an object from offset and length.
-try:
-    response = client.get_object(
-        "my-bucket", "my-object", offset=512, length=1024,
-    )
-    # Read data from response.
-finally:
-    response.close()
-    response.release_conn()
+def main():
+    client = client_from_env()
+    if client == None:
+        client = client_from_play()
+    
+    #Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name)
+    print(bucket_name)
 
-# Get data of an SSE-C encrypted object.
-try:
-    response = client.get_object(
-        "my-bucket", "my-object",
-        ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
-    )
-    # Read data from response.
-finally:
-    response.close()
-    response.release_conn()
+    #Create my-object
+    r = client.put_object(bucket_name, "my-object", io.BytesIO(b"hello"), 5,)
+    client.put_object(bucket_name, "my-object", io.BytesIO(b"Lorem ipsum dolor sit amet orci aliquam."), 40,)
+    ver = r.version_id
+
+    # Get data of an object.
+    try:
+        response = client.get_object(bucket_name, "my-object")
+        # Read data from response.
+    finally:
+        response.close()
+        response.release_conn()
+
+    # Get data of an object of version-ID.
+    try:
+        response = client.get_object(
+            bucket_name, "my-object",
+            version_id = ver,
+        )
+        # Read data from response.
+    finally:
+        response.close()
+        response.release_conn()
+
+    # Get data of an object from offset and length.
+    try:
+        response = client.get_object(
+            bucket_name, "my-object", offset=10, length=15,
+        )
+        # Read data from response.
+    finally:
+        response.close()
+        response.release_conn()
+
+    # # Get data of an SSE-C encrypted object.
+    # try:
+    #     response = client.get_object(
+    #         bucket_name, "my-object",
+    #         ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
+    #     )
+    #     # Read data from response.
+    # finally:
+    #     response.close()
+    #     response.release_conn()
+    
+if __name__ == '__main__':
+    main()
