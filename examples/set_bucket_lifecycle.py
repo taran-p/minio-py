@@ -16,6 +16,7 @@
 
 import os
 from random import randint
+
 from minio import Minio
 from minio.commonconfig import ENABLED, Filter
 from minio.lifecycleconfig import Expiration, LifecycleConfig, Rule, Transition
@@ -61,12 +62,12 @@ def main():
 
     config = LifecycleConfig(
         [
-            # Rule(
-            #     ENABLED,
-            #     rule_filter=Filter(prefix="documents/"),
-            #     rule_id="rule1",
-            #     transition=Transition(days=30, storage_class="GLACIER"),
-            # ),
+            Rule(
+                ENABLED,
+                rule_filter=Filter(prefix="documents/"),
+                rule_id="rule1",
+                transition=Transition(days=30, storage_class="GLACIER"),
+            ),
             Rule(
                 ENABLED,
                 rule_filter=Filter(prefix="logs/"),

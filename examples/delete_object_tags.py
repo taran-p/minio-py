@@ -14,8 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import os
+from random import randint
 from minio import Minio
+from minio.commonconfig import Tags
 
 def client_from_env()->Minio:
     url = os.environ.get("MINIO_ADDRESS")
@@ -51,7 +54,19 @@ def main():
     if client == None:
         client = client_from_play()
 
-    client.delete_object_tags("my-bucket","my-object")
+    #Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name)
+    print(bucket_name)
+
+    #Create my-object
+    client.put_object(bucket_name, "my-object", io.BytesIO(b"hello"), 5,)
+    tags = Tags.new_object_tags()
+    tags["Project"] = "Project One"
+    tags["User"] = "jsmith"
+    client.set_object_tags(bucket_name, "my-object", tags)
+
+    client.delete_object_tags(bucket_name,"my-object")
 
 if __name__ == '__main__':
     main()

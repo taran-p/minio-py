@@ -15,7 +15,11 @@
 # limitations under the License.
 
 import os
+from random import randint
+
 from minio import Minio
+from minio.commonconfig import ENABLED, Filter
+from minio.lifecycleconfig import Expiration, LifecycleConfig, Rule, Transition
 
 def client_from_env()->Minio:
     url = os.environ.get("MINIO_ADDRESS")
@@ -50,6 +54,28 @@ def main():
     client = client_from_env()
     if client == None:
         client = client_from_play()
+
+    #Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name)
+    config = LifecycleConfig(
+        [
+            Rule(
+                ENABLED,
+                rule_filter=Filter(prefix="documents/"),
+                rule_id="rule1",
+                transition=Transition(days=30, storage_class="GLACIER"),
+            ),
+            Rule(
+                ENABLED,
+                rule_filter=Filter(prefix="logs/"),
+                rule_id="rule2",
+                expiration=Expiration(days=365),
+            ),
+        ],
+    )
+    client.set_bucket_lifecycle(bucket_name, config)
+    print(bucket_name)
 
     client.delete_bucket_lifecycle("my-bucket")
 

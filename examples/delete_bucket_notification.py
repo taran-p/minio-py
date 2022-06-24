@@ -14,12 +14,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from random import randint
 from minio import Minio
+from minio.notificationconfig import NotificationConfig, PrefixFilterRule, QueueConfig
 
-client = Minio(
-    "play.min.io",
-    access_key="Q3AM3UQ867SPQQA43P2F",
-    secret_key="zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
-)
+def client_from_env()->Minio:
+    url = os.environ.get("MINIO_ADDRESS")
+    user = os.environ.get("MINIO_ACCESS_KEY")
+    pw = os.environ.get("MINIO_SECRET_KEY")
+    sec_var = os.environ.get("MINIO_SECURE",'off')
+    if sec_var == 'on':
+        sec = True
+    else:
+        sec = False
 
-client.delete_bucket_notification("my-bucket")
+    if url or user or pw:
+        client = Minio(
+            url,
+            access_key=user,
+            secret_key=pw,
+            secure=sec
+        )
+        return client
+    else:
+        return None
+
+def client_from_play()->Minio:
+    client = Minio(
+        'play.min.io',
+        access_key='Q3AM3UQ867SPQQA43P2F',
+        secret_key='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
+    )
+    return client
+
+def main():
+    client = client_from_env()
+    if client == None:
+        client = client_from_play()
+
+    #Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name)
+    config = NotificationConfig(
+        queue_config_list=[
+            QueueConfig(
+                "QUEUE-ARN-OF-THIS-BUCKET",
+                ["s3:ObjectCreated:*"],
+                config_id="1",
+                prefix_filter_rule=PrefixFilterRule("abc"),
+            ),
+        ],
+    )
+    client.set_bucket_notification(bucket_name, config)
+    print(bucket_name)
+
+    client.delete_bucket_notification(bucket_name)
+
+if __name__ == '__main__':
+    main()

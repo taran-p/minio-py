@@ -15,61 +15,101 @@
 # limitations under the License.
 
 import json
+import os
+from random import randint
 
 from minio import Minio
 
-client = Minio(
-    "play.min.io",
-    access_key="Q3AM3UQ867SPQQA43P2F",
-    secret_key="zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
-)
+def client_from_env()->Minio:
+    url = os.environ.get("MINIO_ADDRESS")
+    user = os.environ.get("MINIO_ACCESS_KEY")
+    pw = os.environ.get("MINIO_SECRET_KEY")
+    sec_var = os.environ.get("MINIO_SECURE",'off')
+    if sec_var == 'on':
+        sec = True
+    else:
+        sec = False
 
-# Example anonymous read-only bucket policy.
-policy = {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {"AWS": "*"},
-            "Action": ["s3:GetBucketLocation", "s3:ListBucket"],
-            "Resource": "arn:aws:s3:::my-bucket",
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {"AWS": "*"},
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::my-bucket/*",
-        },
-    ],
-}
-client.set_bucket_policy("my-bucket", json.dumps(policy))
+    if url or user or pw:
+        client = Minio(
+            url,
+            access_key=user,
+            secret_key=pw,
+            secure=sec
+        )
+        return client
+    else:
+        return None
 
-# Example anonymous read-write bucket policy.
-policy = {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {"AWS": "*"},
-            "Action": [
-                "s3:GetBucketLocation",
-                "s3:ListBucket",
-                "s3:ListBucketMultipartUploads",
-            ],
-            "Resource": "arn:aws:s3:::my-bucket",
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {"AWS": "*"},
-            "Action": [
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject",
-                "s3:ListMultipartUploadParts",
-                "s3:AbortMultipartUpload",
-            ],
-            "Resource": "arn:aws:s3:::my-bucket/images/*",
-        },
-    ],
-}
-client.set_bucket_policy("my-bucket", json.dumps(policy))
+def client_from_play()->Minio:
+    client = Minio(
+        'play.min.io',
+        access_key='Q3AM3UQ867SPQQA43P2F',
+        secret_key='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
+    )
+    return client
+
+def main():
+    client = client_from_env()
+    if client == None:
+        client = client_from_play()
+    
+    #Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name)
+    print(bucket_name)
+
+    # Example anonymous read-only bucket policy.
+    policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {"AWS": "*"},
+                "Action": ["s3:GetBucketLocation", "s3:ListBucket"],
+                "Resource": "arn:aws:s3:::my-bucket",
+            },
+            {
+                "Effect": "Allow",
+                "Principal": {"AWS": "*"},
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::my-bucket/*",
+            },
+        ],
+    }
+    client.set_bucket_policy(bucket_name, json.dumps(policy))
+
+    # Example anonymous read-write bucket policy.
+    policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {"AWS": "*"},
+                "Action": [
+                    "s3:GetBucketLocation",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                ],
+                "Resource": "arn:aws:s3:::my-bucket",
+            },
+            {
+                "Effect": "Allow",
+                "Principal": {"AWS": "*"},
+                "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject",
+                    "s3:ListMultipartUploadParts",
+                    "s3:AbortMultipartUpload",
+                ],
+                "Resource": "arn:aws:s3:::my-bucket/images/*",
+            },
+        ],
+    }
+    client.set_bucket_policy(bucket_name, json.dumps(policy))
+
+if __name__ == '__main__':
+    main()
+
+

@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime, timedelta
 import os
+import io
+from random import randint
+from datetime import datetime, timedelta
 
 from minio import Minio
 from minio.commonconfig import GOVERNANCE
@@ -55,14 +57,15 @@ def main():
     if client == None:
         client = client_from_play()
     
-    #Create my-bucket if it does not exist
-    if not client.bucket_exists("my-bucket"):
-        client.make_bucket("my-bucket")
+    #Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name,"us-west-2",object_lock=True)
+
+    #Create my-object
+    client.put_object(bucket_name, "my-object", io.BytesIO(b"hello"), 5,)
 
     config = Retention(GOVERNANCE, datetime.utcnow() + timedelta(days=10))
-    client.set_object_retention("my-bucket", "my-object", config)
+    client.set_object_retention(bucket_name, "my-object", config)
 
 if __name__ == '__main__':
     main()
-
-

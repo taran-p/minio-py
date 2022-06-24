@@ -14,26 +14,76 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import io
+from random import randint
+
 from minio import Minio
 from minio.sse import SseCustomerKey
+from minio.commonconfig import ENABLED
+from minio.versioningconfig import VersioningConfig
 
-client = Minio(
-    "play.min.io",
-    access_key="Q3AM3UQ867SPQQA43P2F",
-    secret_key="zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
-)
+def client_from_env()->Minio:
+    url = os.environ.get("MINIO_ADDRESS")
+    user = os.environ.get("MINIO_ACCESS_KEY")
+    pw = os.environ.get("MINIO_SECRET_KEY")
+    sec_var = os.environ.get("MINIO_SECURE",'off')
+    if sec_var == 'on':
+        sec = True
+    else:
+        sec = False
 
-# Download data of an object.
-client.fget_object("my-bucket", "my-object", "my-filename")
+    if url or user or pw:
+        client = Minio(
+            url,
+            access_key=user,
+            secret_key=pw,
+            secure=sec
+        )
+        return client
+    else:
+        return None
 
-# Download data of an object of version-ID.
-client.fget_object(
-    "my-bucket", "my-object", "my-filename",
-    version_id="dfbd25b3-abec-4184-a4e8-5a35a5c1174d",
-)
+def client_from_play()->Minio:
+    client = Minio(
+        'play.min.io',
+        access_key='Q3AM3UQ867SPQQA43P2F',
+        secret_key='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
+    )
+    return client
 
-# Download data of an SSE-C encrypted object.
-client.fget_object(
-    "my-bucket", "my-object", "my-filename",
-    ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
-)
+def main():
+    client = client_from_env()
+    if client == None:
+        client = client_from_play()
+    
+    #Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name)
+    client.set_bucket_versioning(bucket_name, VersioningConfig(ENABLED))
+    print(bucket_name)
+
+    #Create my-object
+    r = client.put_object(bucket_name, "my-object", io.BytesIO(b"hello"), 5,)
+    client.put_object(bucket_name, "my-object", io.BytesIO(b"goodbye"), 7,)
+    ver = r.version_id
+
+    # Download data of an object.
+    client.fget_object(bucket_name, "my-object", "my-filename1")
+
+    # Download data of an object of version-ID.
+    client.fget_object(
+        bucket_name, "my-object", "my-filename2",
+        version_id=ver,
+    )
+
+    # Download data of an SSE-C encrypted object.
+    client.fget_object(
+        bucket_name, "my-object", "my-filename3",
+        ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
+    )
+
+    
+if __name__ == '__main__':
+    main()
+

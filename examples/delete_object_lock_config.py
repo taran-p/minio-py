@@ -15,7 +15,11 @@
 # limitations under the License.
 
 import os
+from random import randint
+
 from minio import Minio
+from minio.commonconfig import GOVERNANCE
+from minio.objectlockconfig import DAYS, ObjectLockConfig
 
 def client_from_env()->Minio:
     url = os.environ.get("MINIO_ADDRESS")
@@ -51,7 +55,14 @@ def main():
     if client == None:
         client = client_from_play()
 
-    client.delete_object_lock_config("my-bucket")
+    #Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name,"us-west-2",object_lock=True)
+    config = ObjectLockConfig(GOVERNANCE, 15, DAYS)
+    client.set_object_lock_config(bucket_name, config)
+    print(bucket_name)
+
+    client.delete_object_lock_config(bucket_name)
 
 if __name__ == '__main__':
     main()
