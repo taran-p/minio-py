@@ -14,37 +14,81 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from random import randint
+
 from minio import Minio
 from minio.commonconfig import DISABLED, ENABLED, AndOperator, Filter
 from minio.replicationconfig import (DeleteMarkerReplication, Destination,
                                      ReplicationConfig, Rule)
 
-client = Minio(
-    "play.min.io",
-    access_key="Q3AM3UQ867SPQQA43P2F",
-    secret_key="zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
-)
+def client_from_env()->Minio:
+    url = os.environ.get("MINIO_ADDRESS")
+    user = os.environ.get("MINIO_ACCESS_KEY")
+    pw = os.environ.get("MINIO_SECRET_KEY")
+    sec_var = os.environ.get("MINIO_SECURE",'off')
+    if sec_var == 'on':
+        sec = True
+    else:
+        sec = False
 
-config = ReplicationConfig(
-    "REPLACE-WITH-ACTUAL-ROLE",
-    [
-        Rule(
-            Destination(
-                "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN",
-            ),
-            ENABLED,
-            delete_marker_replication=DeleteMarkerReplication(
-                DISABLED,
-            ),
-            rule_filter=Filter(
-                AndOperator(
-                    "TaxDocs",
-                    {"key1": "value1", "key2": "value2"},
+    if url or user or pw:
+        client = Minio(
+            url,
+            access_key=user,
+            secret_key=pw,
+            secure=sec
+        )
+        return client
+    else:
+        return None
+
+def client_from_play()->Minio:
+    client = Minio(
+        'play.min.io',
+        access_key='Q3AM3UQ867SPQQA43P2F',
+        secret_key='zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
+    )
+    return client
+
+def main():
+    client = client_from_env()
+    if client == None:
+        client = client_from_play()
+    
+    # Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name)
+    print(bucket_name)
+
+    # Create replication configuration
+    config = ReplicationConfig(
+        "REPLACE-WITH-ACTUAL-ROLE",
+        [
+            Rule(
+                Destination(
+                    "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN",
                 ),
+                ENABLED,
+                delete_marker_replication=DeleteMarkerReplication(
+                    DISABLED,
+                ),
+                rule_filter=Filter(
+                    AndOperator(
+                        "TaxDocs",
+                        {"key1": "value1", "key2": "value2"},
+                    ),
+                ),
+                rule_id="rule1",
+                priority=1,
             ),
-            rule_id="rule1",
-            priority=1,
-        ),
-    ],
-)
-client.set_bucket_replication("my-bucket", config)
+        ],
+    )
+    client.set_bucket_replication("my-bucket", config)
+
+if __name__ == '__main__':
+    main()
+
+
+
+
