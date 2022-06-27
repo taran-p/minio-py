@@ -55,7 +55,7 @@ def main():
     if client == None:
         client = client_from_play()
     
-    #Create random my-bucket with lifecycle
+    # Create random my-bucket with lifecycle
     bucket_name = "my-bucket"+str(randint(10000,99999))
     client.make_bucket(bucket_name)
     config = LifecycleConfig(
@@ -71,7 +71,7 @@ def main():
     client.set_bucket_lifecycle(bucket_name, config)
     print(bucket_name)
 
-    check = client.get_bucket_lifecycle(bucket_name)
+    client.get_bucket_lifecycle(bucket_name)
 
 if __name__ == '__main__':
     main()

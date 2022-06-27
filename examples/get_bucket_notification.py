@@ -54,7 +54,7 @@ def main():
     if client == None:
         client = client_from_play()
     
-    #Create random my-bucket
+    # Create random my-bucket
     bucket_name = "my-bucket"+str(randint(10000,99999))
     client.make_bucket(bucket_name)
     config = NotificationConfig(
@@ -70,9 +70,7 @@ def main():
     client.set_bucket_notification(bucket_name, config)
     print(bucket_name)
 
-    check = client.get_bucket_notification(bucket_name)
-    print(check)
+    client.get_bucket_notification(bucket_name)
 
-    
 if __name__ == '__main__':
     main()

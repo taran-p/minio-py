@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import os
+from random import randint
 from minio import Minio
 
 def client_from_env()->Minio:
@@ -51,7 +52,12 @@ def main():
     if client == None:
         client = client_from_play()
 
-    client.delete_bucket_replication("my-bucket")
+    # Create random my-bucket
+    bucket_name = "my-bucket"+str(randint(10000,99999))
+    client.make_bucket(bucket_name)
+    print(bucket_name)
+
+    client.delete_bucket_replication(bucket_name)
 
 if __name__ == '__main__':
     main()

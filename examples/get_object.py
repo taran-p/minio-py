@@ -55,12 +55,12 @@ def main():
     if client == None:
         client = client_from_play()
     
-    #Create random my-bucket
+    # Create random my-bucket
     bucket_name = "my-bucket"+str(randint(10000,99999))
     client.make_bucket(bucket_name)
     print(bucket_name)
 
-    #Create my-object
+    # Create my-object
     r = client.put_object(bucket_name, "my-object", io.BytesIO(b"hello"), 5,)
     client.put_object(bucket_name, "my-object", io.BytesIO(b"Lorem ipsum dolor sit amet orci aliquam."), 40,)
     ver = r.version_id
@@ -94,16 +94,16 @@ def main():
         response.close()
         response.release_conn()
 
-    # # Get data of an SSE-C encrypted object.
-    # try:
-    #     response = client.get_object(
-    #         bucket_name, "my-object",
-    #         ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
-    #     )
-    #     # Read data from response.
-    # finally:
-    #     response.close()
-    #     response.release_conn()
+    # Get data of an SSE-C encrypted object.
+    try:
+        response = client.get_object(
+            bucket_name, "my-object",
+            ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
+        )
+        # Read data from response.
+    finally:
+        response.close()
+        response.release_conn()
     
 if __name__ == '__main__':
     main()
