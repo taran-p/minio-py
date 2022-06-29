@@ -14,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from urllib.request import urlopen
 from minio import Minio
-from minio.commonconfig import ComposeSource, Tags
+from minio.commonconfig import ComposeSource
 from minio.sse import SseS3
 import os
 import io
@@ -62,10 +63,19 @@ def main():
     client.make_bucket(bucket_name_2)
     print(bucket_name_2)
 
-    # Create my-object
-    client.put_object(bucket_name_1, "my-object-pt1", io.BytesIO(b"hello"), 5,) #Objects must be bigger than 5MB
-    client.put_object(bucket_name_1, "my-object-pt2", io.BytesIO(b"hi"), 2,)
-    client.put_object(bucket_name_1, "my-object-pt3", io.BytesIO(b"goodbye"), 7,)
+    # Create my-object-pts with minimum source size 5MB
+    data1 = urlopen("https://github.com/minio/minio/archive/refs/heads/master.zip")
+    data2 = urlopen("https://github.com/minio/minio/archive/refs/heads/master.zip")
+    data3 = urlopen("https://github.com/minio/minio/archive/refs/heads/master.zip")
+    client.put_object(
+        bucket_name_1, "my-object-pt1", data1, 5242880,
+    )
+    client.put_object(
+        bucket_name_1, "my-object-pt2", data2, 5242880,
+    )
+    client.put_object(
+        bucket_name_1, "my-object-pt3", data3, 5242880,
+    )
 
     sources = [
         ComposeSource(bucket_name_1, "my-object-pt1"),

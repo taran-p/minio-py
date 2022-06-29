@@ -67,13 +67,13 @@ def main():
                 "Effect": "Allow",
                 "Principal": {"AWS": "*"},
                 "Action": ["s3:GetBucketLocation", "s3:ListBucket"],
-                "Resource": "arn:aws:s3:::my-bucket",
+                "Resource": "arn:aws:s3:::"+bucket_name,
             },
             {
                 "Effect": "Allow",
                 "Principal": {"AWS": "*"},
                 "Action": "s3:GetObject",
-                "Resource": "arn:aws:s3:::my-bucket/*",
+                "Resource": "arn:aws:s3:::"+bucket_name+"/*",
             },
         ],
     }
@@ -91,7 +91,7 @@ def main():
                     "s3:ListBucket",
                     "s3:ListBucketMultipartUploads",
                 ],
-                "Resource": "arn:aws:s3:::my-bucket",
+                "Resource": "arn:aws:s3:::"+bucket_name,
             },
             {
                 "Effect": "Allow",
@@ -103,7 +103,7 @@ def main():
                     "s3:ListMultipartUploadParts",
                     "s3:AbortMultipartUpload",
                 ],
-                "Resource": "arn:aws:s3:::my-bucket/images/*",
+                "Resource": "arn:aws:s3:::"+bucket_name+"/images/*",
             },
         ],
     }

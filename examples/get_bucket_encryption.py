@@ -62,8 +62,7 @@ def main():
     )
     print(bucket_name)
 
-    check = client.get_bucket_encryption(bucket_name)
-    print(check)
+    conifig = client.get_bucket_encryption(bucket_name)
 
 if __name__ == '__main__':
     main()

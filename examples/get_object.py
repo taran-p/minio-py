@@ -25,7 +25,7 @@ def client_from_env()->Minio:
     url = os.environ.get("MINIO_ADDRESS")
     user = os.environ.get("MINIO_ACCESS_KEY")
     pw = os.environ.get("MINIO_SECRET_KEY")
-    sec_var = os.environ.get("MINIO_SECURE",'on')
+    sec_var = os.environ.get("MINIO_SECURE",'off')
     if sec_var == 'on':
         sec = True
     else:
@@ -94,16 +94,16 @@ def main():
         response.close()
         response.release_conn()
 
-    # Get data of an SSE-C encrypted object.
-    try:
-        response = client.get_object(
-            bucket_name, "my-object",
-            ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
-        )
-        # Read data from response.
-    finally:
-        response.close()
-        response.release_conn()
+    # # Get data of an SSE-C encrypted object.
+    # try:
+    #     response = client.get_object(
+    #         bucket_name, "my-object",
+    #         ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
+    #     )
+    #     # Read data from response.
+    # finally:
+    #     response.close()
+    #     response.release_conn()
     
 if __name__ == '__main__':
     main()

@@ -64,12 +64,6 @@ def main():
         [
             Rule(
                 ENABLED,
-                rule_filter=Filter(prefix="documents/"),
-                rule_id="rule1",
-                transition=Transition(days=30, storage_class="GLACIER"),
-            ),
-            Rule(
-                ENABLED,
                 rule_filter=Filter(prefix="logs/"),
                 rule_id="rule2",
                 expiration=Expiration(days=365),

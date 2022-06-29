@@ -87,16 +87,16 @@ def main():
         ),
     )
 
-    # Get SSE-C encrypted object information.
-    result = client.stat_object(
-        bucket_name, "my-object",
-        ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
-    )
-    print(
-        "last-modified: {0}, size: {1}".format(
-            result.last_modified, result.size,
-        ),
-    )
+    # # Get SSE-C encrypted object information.
+    # result = client.stat_object(
+    #     bucket_name, "my-object",
+    #     ssec=SseCustomerKey(b"32byteslongsecretkeymustprovided"),
+    # )
+    # print(
+    #     "last-modified: {0}, size: {1}".format(
+    #         result.last_modified, result.size,
+    #     ),
+    # )
 
 if __name__ == '__main__':
     main()

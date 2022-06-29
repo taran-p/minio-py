@@ -62,7 +62,7 @@ def main():
     print(bucket_name)
 
     #Create my-object
-    client.put_object(bucket_name, "my-object.csv", io.BytesIO(b"hello"), 17,content_type="application/csv",)
+    client.put_object(bucket_name, "my-object.csv", io.BytesIO(b"hello"), 5,content_type="application/csv",)
 
     with client.select_object_content(
             bucket_name,
